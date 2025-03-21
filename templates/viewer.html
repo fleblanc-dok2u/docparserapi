@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Document Viewer</title>
+    <style>
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* or center if you want vertical centering too */
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .ocr-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .ocr-text {
+            flex: 1;
+            max-width: 400px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+        }
+        .ocr-image {
+            flex: 1;
+            position: relative;
+        }
+        .ocr-editor {
+            flex: 1;
+            max-width: 400px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+          }
+        .ocr-box {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .ocr-box:hover {
+            background-color: #e0e0e0;
+        }
+        .copy-btn {
+            position: absolute;
+            right: 5px;
+            bottom: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .ocr-image {
+            position: relative;
+        }
+        .image {
+            width: 1000px;
+            height: auto;
+            border: 1px solid #ddd;
+        }
+        .bbox {
+            position: absolute;
+            border: 2px solid transparent;
+            transition: border 0.2s ease-in-out;
+            border-color: red;
+        }
+        .highlight {
+            background: rgba(255, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ocr-container">
+        <div class="ocr-text">
+            {{ TEXT_BLOCKS }}
+        </div>
+        <div class="ocr-image">
+            <img src="{{ IMAGE_PATH }}" alt="Scanned Document" class="image">
+            <div id="bboxes">
+                {{ BBOX_BLOCKS }}
+            </div>
+        </div>
+
+    </div>
+
+    <script src=\"https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js\" referrerpolicy=\"origin\"></script>
+    <script>
+      tinymce.init({
+        selector: '#editor',
+        height: 400,
+        menubar: false,
+        plugins: 'advlist autolink lists link charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table wordcount',
+        toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist | removeformat',
+        content_style: 'body { font-family:Arial,sans-serif; font-size:14px }'
+      });
+    </script>
+    <script>
+        function highlightBBox(index) {
+            document.getElementById(`bbox-${index}`).classList.add("highlight");
+        }
+        function removeHighlight(index) {
+            document.getElementById(`bbox-${index}`).classList.remove("highlight");
+        }
+        function copyText(index) {
+            const text = document.querySelector(`[data-index="${index}"]`).innerText.replace('📋', '');
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Texte copié !");
+            });
+        }
+    </script>
+
+</body>
+</html>

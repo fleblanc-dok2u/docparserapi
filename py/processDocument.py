@@ -10,6 +10,7 @@ import re
 import pymupdf  # PyMuPDF
 
 from py.saveLayout import  generate_html_with_bboxes # Assuming extractTable.py contains parse_document and extract_tables functions
+from google.cloud import documentai_v1beta3 as documentai
 
 
 from typing import Optional, Sequence
@@ -19,10 +20,11 @@ PROJECT_ID = "373815688414"
 LOCATION = "us"  # Change based on your region (us, eu, asia)
 LAYOUT_PROCESSOR_ID = "c07a954868a2e329"  # Get from Document AI Console
 OCR_PROCESSOR_ID = "49cd9e89ceca3557"  # Get from Document AI Console
-CREDENTIALS_PATH = "vosker-b01eff5a44f3.json"  # JSON key file
 
+# https://us-documentai.googleapis.com/v1/projects/373815688414/locations/us/processors/c07a954868a2e329:process
+# https://us-documentai.googleapis.com/v1/projects/373815688414/locations/us/processors/49cd9e89ceca3557:process
 # Authenticate using service account
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = CREDENTIALS_PATH
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "../vosker-b01eff5a44f3.json"
 
 def convert_image_to_pdf(image_path):
     """Convert an image (JPG, PNG) to a single-page PDF."""
@@ -181,7 +183,6 @@ def get_document_ocr(file_path,output_path):
     # Parse response
     document = result.document  # Document AI output
     
-    file_list = []
     # Extract text, bounding boxes, and page numbers
     structured_data = extract_text_blocks_and_tables(document,output_path)
     #Save layout
@@ -193,10 +194,12 @@ def get_document_ocr(file_path,output_path):
     image_paths = save_extracted_images(document, output_path)
 
     html_path = os.path.join(output_path, f"output.html")
-    # saveLayout.generate_html_from_structure(structured_data, image_paths, html_path)
-    generate_html_with_bboxes(structured_data, image_paths[0], html_path)
+    img_path = os.path.join(output_path,image_paths[0])
     
-    return file_list
+    # saveLayout.generate_html_from_structure(structured_data, image_paths, html_path)
+    generate_html_with_bboxes(structured_data, img_path, html_path,f"templates/viewer.html")
+    
+    return html_path
 
 # Function to extract text, blocks, and tables from the OCR response
 def extract_text_blocks_and_tables(document, output_folder):

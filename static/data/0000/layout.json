@@ -1,0 +1,115 @@
+{
+    "blocks": [
+        {
+            "page": 1,
+            "text": "AIDE-MÉMOIRE POUR RETOUR À DOMICILE\n",
+            "bounding_box": [
+                [
+                    716,
+                    415
+                ],
+                [
+                    3185,
+                    415
+                ],
+                [
+                    3185,
+                    507
+                ],
+                [
+                    716,
+                    507
+                ]
+            ]
+        },
+        {
+            "page": 1,
+            "text": "** Il est normal d'avoir de la douleur pendant quelques semaines. Suivez les instructions\nque votre infirmière vous a données pour contrôler votre douleur.\n** Assurez-vous de maintenir votre douleur en-dessous de 4/10.\n",
+            "bounding_box": [
+                [
+                    505,
+                    711
+                ],
+                [
+                    3504,
+                    700
+                ],
+                [
+                    3505,
+                    994
+                ],
+                [
+                    506,
+                    1005
+                ]
+            ]
+        },
+        {
+            "page": 1,
+            "text": "** Prenez le Tylenol de façon régulière aux repas et au coucher les premiers jours.\n** Prenez l'anti-inflammatoire aux heures prévues si prescrit.\n",
+            "bounding_box": [
+                [
+                    509,
+                    1082
+                ],
+                [
+                    3303,
+                    1077
+                ],
+                [
+                    3303,
+                    1303
+                ],
+                [
+                    509,
+                    1308
+                ]
+            ]
+        },
+        {
+            "page": 1,
+            "text": "** Prenez vos calmants au besoin.\n",
+            "bounding_box": [
+                [
+                    517,
+                    1388
+                ],
+                [
+                    1690,
+                    1380
+                ],
+                [
+                    1690,
+                    1439
+                ],
+                [
+                    517,
+                    1447
+                ]
+            ]
+        },
+        {
+            "page": 1,
+            "text": "** Mettez votre glace 10 minutes à chaque heure afin de diminuer l'enflure et la douleur.\n** Faites vos exercices prescrits régulièrement.\n** Mettez votre glace 10 à 15 minutes avant et après vos exercices.\n** Surélevez votre jambe lorsque vous êtes au repos.\n** Pour l'enflure, mettre le bas élastique selon les recommandations, à retirer la nuit.\n** Si vous avez des agrafes, le CLSC communiquera avec vous dans les prochains jours\nafin de prendre rendez-vous pour le retrait.\n",
+            "bounding_box": [
+                [
+                    520,
+                    1519
+                ],
+                [
+                    3515,
+                    1485
+                ],
+                [
+                    3526,
+                    2455
+                ],
+                [
+                    531,
+                    2490
+                ]
+            ]
+        }
+    ],
+    "tables": []
+}

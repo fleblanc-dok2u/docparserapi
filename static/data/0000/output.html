@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Document Viewer</title>
+    <style>
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* or center if you want vertical centering too */
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .ocr-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .ocr-text {
+            flex: 1;
+            max-width: 400px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+        }
+        .ocr-image {
+            flex: 1;
+            position: relative;
+        }
+        .ocr-editor {
+            flex: 1;
+            max-width: 400px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+          }
+        .ocr-box {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .ocr-box:hover {
+            background-color: #e0e0e0;
+        }
+        .copy-btn {
+            position: absolute;
+            right: 5px;
+            bottom: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .ocr-image {
+            position: relative;
+        }
+        .image {
+            width: 1000px;
+            height: auto;
+            border: 1px solid #ddd;
+        }
+        .bbox {
+            position: absolute;
+            border: 2px solid transparent;
+            transition: border 0.2s ease-in-out;
+            border-color: red;
+        }
+        .highlight {
+            background: rgba(255, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ocr-container">
+        <div class="ocr-text">
+            <div class="ocr-box" data-index="0" onmouseover="highlightBBox(0)" onmouseout="removeHighlight(0)">AIDE-MÉMOIRE POUR RETOUR À DOMICILE <button class="copy-btn" onclick="copyText(0)">📋</button></div><div class="ocr-box" data-index="1" onmouseover="highlightBBox(1)" onmouseout="removeHighlight(1)">** Il est normal d'avoir de la douleur pendant quelques semaines. Suivez les instructions<br>que votre infirmière vous a données pour contrôler votre douleur.<br>** Assurez-vous de maintenir votre douleur en-dessous de 4/10. <button class="copy-btn" onclick="copyText(1)">📋</button></div><div class="ocr-box" data-index="2" onmouseover="highlightBBox(2)" onmouseout="removeHighlight(2)">** Prenez le Tylenol de façon régulière aux repas et au coucher les premiers jours.<br>** Prenez l'anti-inflammatoire aux heures prévues si prescrit. <button class="copy-btn" onclick="copyText(2)">📋</button></div><div class="ocr-box" data-index="3" onmouseover="highlightBBox(3)" onmouseout="removeHighlight(3)">** Prenez vos calmants au besoin. <button class="copy-btn" onclick="copyText(3)">📋</button></div><div class="ocr-box" data-index="4" onmouseover="highlightBBox(4)" onmouseout="removeHighlight(4)">** Mettez votre glace 10 minutes à chaque heure afin de diminuer l'enflure et la douleur.<br>** Faites vos exercices prescrits régulièrement.<br>** Mettez votre glace 10 à 15 minutes avant et après vos exercices.<br>** Surélevez votre jambe lorsque vous êtes au repos.<br>** Pour l'enflure, mettre le bas élastique selon les recommandations, à retirer la nuit.<br>** Si vous avez des agrafes, le CLSC communiquera avec vous dans les prochains jours<br>afin de prendre rendez-vous pour le retrait. <button class="copy-btn" onclick="copyText(4)">📋</button></div>
+        </div>
+        <div class="ocr-image">
+            <img src="page_1.jpg" alt="Scanned Document" class="image">
+            <div id="bboxes">
+                <div class="bbox" id="bbox-0" style="left: 177px; top: 102px; width: 612px; height: 22px;"></div><div class="bbox" id="bbox-1" style="left: 125px; top: 176px; width: 743px; height: 70px;"></div><div class="bbox" id="bbox-2" style="left: 126px; top: 268px; width: 692px; height: 54px;"></div><div class="bbox" id="bbox-3" style="left: 128px; top: 344px; width: 290px; height: 12px;"></div><div class="bbox" id="bbox-4" style="left: 128px; top: 376px; width: 742px; height: 232px;"></div>
+            </div>
+        </div>
+        <div class=\"ocr-editor\">
+            <h3>Text Editor</h3>
+            <textarea id=\"editor\"></textarea>
+        </div>
+    </div>
+
+    <script src=\"https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js\" referrerpolicy=\"origin\"></script>
+    <script>
+      tinymce.init({
+        selector: '#editor',
+        height: 400,
+        menubar: false,
+        plugins: 'advlist autolink lists link charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table wordcount',
+        toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist | removeformat',
+        content_style: 'body { font-family:Arial,sans-serif; font-size:14px }'
+      });
+    </script>
+    <script>
+        function highlightBBox(index) {
+            document.getElementById(`bbox-${index}`).classList.add("highlight");
+        }
+        function removeHighlight(index) {
+            document.getElementById(`bbox-${index}`).classList.remove("highlight");
+        }
+        function copyText(index) {
+            const text = document.querySelector(`[data-index="${index}"]`).innerText.replace('📋', '');
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Texte copié !");
+            });
+        }
+    </script>
+
+</body>
+</html>
