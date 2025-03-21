@@ -1,0 +1,9 @@
+flask
+waitress
+requests
+pymupdf 
+pillow
+pandas
+numpy
+google-cloud-documentai
+requests

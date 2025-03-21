@@ -1,0 +1,6 @@
+.vscode/launch.json
+static/data/*.json
+static/data/*.csv
+uploads/*.pdf
+__pycache__/*
+py/csn.py
