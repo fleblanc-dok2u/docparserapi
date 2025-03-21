@@ -1,111 +1,182 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OCR Document Viewer</title>
-    <style>
-
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: flex-start; /* or center if you want vertical centering too */
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-
-        .ocr-container {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-        }
-        .ocr-text {
-            flex: 1;
-            max-width: 400px;
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            overflow-y: auto;
-        }
-        .ocr-image {
-            flex: 1;
-            position: relative;
-        }
-        .ocr-editor {
-            flex: 1;
-            max-width: 400px;
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
-          }
-        .ocr-box {
-            padding: 8px;
-            border-bottom: 1px solid #ddd;
-            position: relative;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .ocr-box:hover {
-            background-color: #e0e0e0;
-        }
-        .copy-btn {
-            position: absolute;
-            right: 5px;
-            bottom: 5px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .ocr-image {
-            position: relative;
-        }
-        .image {
-            width: 1000px;
-            height: auto;
-            border: 1px solid #ddd;
-        }
-        .bbox {
-            position: absolute;
-            border: 2px solid transparent;
-            transition: border 0.2s ease-in-out;
-            border-color: red;
-        }
-        .highlight {
-            background: rgba(255, 0, 0, 0.2);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OCR Viewer</title>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f4f4f4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+  
+      .ocr-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        height: 80vh;
+      }
+  
+      .ocr-editor {
+        flex: 1;
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        overflow-y: auto;
+        height: 100%;
+      }
+  
+      .ocr-right {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+  
+      .ocr-image {
+        position: relative;
+        max-height: 50%;
+        overflow: hidden;
+      }
+  
+      .ocr-text {
+        overflow-y: auto;
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      }
+  
+      .ocr-box {
+        padding: 8px;
+        border-bottom: 1px solid #ddd;
+        position: relative;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+  
+      .ocr-box:hover {
+        background-color: #e0e0e0;
+      }
+  
+      .copy-btn {
+        position: absolute;
+        right: 5px;
+        bottom: 5px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+      }
+  
+      .image {
+        width: 100%;
+        height: auto;
+        max-height: 100%;
+        object-fit: contain;
+        border: 1px solid #ddd;
+      }
+  
+      .bbox {
+        position: absolute;
+        border: 2px solid transparent;
+        border-color: red;
+        transition: border 0.2s ease-in-out;
+      }
+  
+      .highlight {
+        background: rgba(255, 0, 0, 0.2);
+      }
+  </style>
 </head>
 <body>
 
-    <div class="ocr-container">
+  <div class="ocr-container">
+    <div class="ocr-editor">
+      <textarea id="editor"></textarea>
+    </div>
+    <div class="ocr-right">
         <div class="ocr-text">
             {{ TEXT_BLOCKS }}
         </div>
         <div class="ocr-image">
-            <img src="{{ IMAGE_PATH }}" alt="Scanned Document" class="image">
-            <div id="bboxes">
-                {{ BBOX_BLOCKS }}
-            </div>
-        </div>
+        <img id="docImage" src="{{ IMAGE_PATH }}" class="image" >
+        <div id="bboxes"></div>
+      </div>
 
     </div>
+  </div>
 
-    <script src=\"https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js\" referrerpolicy=\"origin\"></script>
+    <script src="https://cdn.tiny.cloud/1/oaylrsrr6mfzv79xmqgpgefa5zl3mrku0f9s5oyoiooeai7n/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+
     <script>
-      tinymce.init({
-        selector: '#editor',
-        height: 400,
-        menubar: false,
-        plugins: 'advlist autolink lists link charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table wordcount',
-        toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist | removeformat',
-        content_style: 'body { font-family:Arial,sans-serif; font-size:14px }'
-      });
+        tinymce.init({
+            selector: 'textarea#editor',
+            height: '100%',
+            plugins: [
+              'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+              'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+              'insertdatetime', 'media', 'table', 'help', 'wordcount'
+            ],
+            toolbar: 'undo redo | blocks | ' +
+            'bold italic backcolor | alignleft aligncenter ' +
+            'alignright alignjustify | bullist numlist outdent indent | ' +
+            'removeformat | help',
+            content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px }'
+          });
+          
+
     </script>
+    <script>
+        const ORIGINAL_WIDTH = {{ ORIGINAL_WIDTH }};
+        const ORIGINAL_HEIGHT = {{ ORIGINAL_HEIGHT }};
+        const blocks = {{ BBOX_DATA_JSON }};
+      
+        window.addEventListener('load', () => {
+            const image = document.getElementById("docImage");
+            if (image.complete) {
+              renderBBoxes();
+            } else {
+              image.addEventListener('load', renderBBoxes);
+            }
+          });
+
+        function renderBBoxes() {
+            const image = document.getElementById("docImage");
+            const bboxesContainer = document.getElementById("bboxes");
+            
+            const scaleY = image.clientHeight / ORIGINAL_HEIGHT;
+            const scaleX = scaleY ;
+          
+            const offsetY = image.offsetTop;  // image margin-top inside container
+            const offsetX = (image.clientWidth - scaleX * ORIGINAL_WIDTH)/2; // image margin-left inside container
+
+            blocks.forEach((block, i) => {
+              const div = document.createElement("div");
+              div.className = "bbox";
+              div.id = `bbox-${i}`;
+          
+              const x = block.bounding_box[0][0] * scaleX + offsetX;
+              const y = block.bounding_box[0][1] * scaleY + offsetY;
+              const width = (block.bounding_box[1][0] - block.bounding_box[0][0]) * scaleX;
+              const height = (block.bounding_box[2][1] - block.bounding_box[0][1]) * scaleY;
+          
+              div.style.left = `${x}px`;
+              div.style.top = `${y}px`;
+              div.style.width = `${width}px`;
+              div.style.height = `${height}px`;
+          
+              bboxesContainer.appendChild(div);
+            });
+        }
+      </script>
+      
     <script>
         function highlightBBox(index) {
             document.getElementById(`bbox-${index}`).classList.add("highlight");

@@ -1,114 +1,182 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OCR Document Viewer</title>
-    <style>
-
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: flex-start; /* or center if you want vertical centering too */
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-
-        .ocr-container {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-        }
-        .ocr-text {
-            flex: 1;
-            max-width: 400px;
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            overflow-y: auto;
-        }
-        .ocr-image {
-            flex: 1;
-            position: relative;
-        }
-        .ocr-editor {
-            flex: 1;
-            max-width: 400px;
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
-          }
-        .ocr-box {
-            padding: 8px;
-            border-bottom: 1px solid #ddd;
-            position: relative;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .ocr-box:hover {
-            background-color: #e0e0e0;
-        }
-        .copy-btn {
-            position: absolute;
-            right: 5px;
-            bottom: 5px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .ocr-image {
-            position: relative;
-        }
-        .image {
-            width: 1000px;
-            height: auto;
-            border: 1px solid #ddd;
-        }
-        .bbox {
-            position: absolute;
-            border: 2px solid transparent;
-            transition: border 0.2s ease-in-out;
-            border-color: red;
-        }
-        .highlight {
-            background: rgba(255, 0, 0, 0.2);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OCR Viewer</title>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f4f4f4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+  
+      .ocr-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        height: 80vh;
+      }
+  
+      .ocr-editor {
+        flex: 1;
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        overflow-y: auto;
+        height: 100%;
+      }
+  
+      .ocr-right {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+  
+      .ocr-image {
+        position: relative;
+        max-height: 50%;
+        overflow: hidden;
+      }
+  
+      .ocr-text {
+        overflow-y: auto;
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      }
+  
+      .ocr-box {
+        padding: 8px;
+        border-bottom: 1px solid #ddd;
+        position: relative;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+  
+      .ocr-box:hover {
+        background-color: #e0e0e0;
+      }
+  
+      .copy-btn {
+        position: absolute;
+        right: 5px;
+        bottom: 5px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+      }
+  
+      .image {
+        width: 100%;
+        height: auto;
+        max-height: 100%;
+        object-fit: contain;
+        border: 1px solid #ddd;
+      }
+  
+      .bbox {
+        position: absolute;
+        border: 2px solid transparent;
+        border-color: red;
+        transition: border 0.2s ease-in-out;
+      }
+  
+      .highlight {
+        background: rgba(255, 0, 0, 0.2);
+      }
+  </style>
 </head>
 <body>
 
-    <div class="ocr-container">
+  <div class="ocr-container">
+    <div class="ocr-editor">
+      <textarea id="editor"></textarea>
+    </div>
+    <div class="ocr-right">
         <div class="ocr-text">
             <div class="ocr-box" data-index="0" onmouseover="highlightBBox(0)" onmouseout="removeHighlight(0)">AIDE-MÉMOIRE POUR RETOUR À DOMICILE <button class="copy-btn" onclick="copyText(0)">📋</button></div><div class="ocr-box" data-index="1" onmouseover="highlightBBox(1)" onmouseout="removeHighlight(1)">** Il est normal d'avoir de la douleur pendant quelques semaines. Suivez les instructions<br>que votre infirmière vous a données pour contrôler votre douleur.<br>** Assurez-vous de maintenir votre douleur en-dessous de 4/10. <button class="copy-btn" onclick="copyText(1)">📋</button></div><div class="ocr-box" data-index="2" onmouseover="highlightBBox(2)" onmouseout="removeHighlight(2)">** Prenez le Tylenol de façon régulière aux repas et au coucher les premiers jours.<br>** Prenez l'anti-inflammatoire aux heures prévues si prescrit. <button class="copy-btn" onclick="copyText(2)">📋</button></div><div class="ocr-box" data-index="3" onmouseover="highlightBBox(3)" onmouseout="removeHighlight(3)">** Prenez vos calmants au besoin. <button class="copy-btn" onclick="copyText(3)">📋</button></div><div class="ocr-box" data-index="4" onmouseover="highlightBBox(4)" onmouseout="removeHighlight(4)">** Mettez votre glace 10 minutes à chaque heure afin de diminuer l'enflure et la douleur.<br>** Faites vos exercices prescrits régulièrement.<br>** Mettez votre glace 10 à 15 minutes avant et après vos exercices.<br>** Surélevez votre jambe lorsque vous êtes au repos.<br>** Pour l'enflure, mettre le bas élastique selon les recommandations, à retirer la nuit.<br>** Si vous avez des agrafes, le CLSC communiquera avec vous dans les prochains jours<br>afin de prendre rendez-vous pour le retrait. <button class="copy-btn" onclick="copyText(4)">📋</button></div>
         </div>
         <div class="ocr-image">
-            <img src="page_1.jpg" alt="Scanned Document" class="image">
-            <div id="bboxes">
-                <div class="bbox" id="bbox-0" style="left: 177px; top: 102px; width: 612px; height: 22px;"></div><div class="bbox" id="bbox-1" style="left: 125px; top: 176px; width: 743px; height: 70px;"></div><div class="bbox" id="bbox-2" style="left: 126px; top: 268px; width: 692px; height: 54px;"></div><div class="bbox" id="bbox-3" style="left: 128px; top: 344px; width: 290px; height: 12px;"></div><div class="bbox" id="bbox-4" style="left: 128px; top: 376px; width: 742px; height: 232px;"></div>
-            </div>
-        </div>
-        <div class=\"ocr-editor\">
-            <h3>Text Editor</h3>
-            <textarea id=\"editor\"></textarea>
-        </div>
-    </div>
+        <img id="docImage" src="page_1.jpg" class="image" >
+        <div id="bboxes"></div>
+      </div>
 
-    <script src=\"https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js\" referrerpolicy=\"origin\"></script>
+    </div>
+  </div>
+
+    <script src="https://cdn.tiny.cloud/1/oaylrsrr6mfzv79xmqgpgefa5zl3mrku0f9s5oyoiooeai7n/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+
     <script>
-      tinymce.init({
-        selector: '#editor',
-        height: 400,
-        menubar: false,
-        plugins: 'advlist autolink lists link charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table wordcount',
-        toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist | removeformat',
-        content_style: 'body { font-family:Arial,sans-serif; font-size:14px }'
-      });
+        tinymce.init({
+            selector: 'textarea#editor',
+            height: '100%',
+            plugins: [
+              'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+              'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+              'insertdatetime', 'media', 'table', 'help', 'wordcount'
+            ],
+            toolbar: 'undo redo | blocks | ' +
+            'bold italic backcolor | alignleft aligncenter ' +
+            'alignright alignjustify | bullist numlist outdent indent | ' +
+            'removeformat | help',
+            content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px }'
+          });
+          
+
     </script>
+    <script>
+        const ORIGINAL_WIDTH = 4032;
+        const ORIGINAL_HEIGHT = 3024;
+        const blocks = [{"page": 1, "text": "AIDE-M\u00c9MOIRE POUR RETOUR \u00c0 DOMICILE\n", "bounding_box": [[716, 415], [3185, 415], [3185, 507], [716, 507]]}, {"page": 1, "text": "** Il est normal d'avoir de la douleur pendant quelques semaines. Suivez les instructions\nque votre infirmi\u00e8re vous a donn\u00e9es pour contr\u00f4ler votre douleur.\n** Assurez-vous de maintenir votre douleur en-dessous de 4/10.\n", "bounding_box": [[505, 711], [3504, 700], [3505, 994], [506, 1005]]}, {"page": 1, "text": "** Prenez le Tylenol de fa\u00e7on r\u00e9guli\u00e8re aux repas et au coucher les premiers jours.\n** Prenez l'anti-inflammatoire aux heures pr\u00e9vues si prescrit.\n", "bounding_box": [[509, 1082], [3303, 1077], [3303, 1303], [509, 1308]]}, {"page": 1, "text": "** Prenez vos calmants au besoin.\n", "bounding_box": [[518, 1388], [1690, 1380], [1690, 1439], [518, 1447]]}, {"page": 1, "text": "** Mettez votre glace 10 minutes \u00e0 chaque heure afin de diminuer l'enflure et la douleur.\n** Faites vos exercices prescrits r\u00e9guli\u00e8rement.\n** Mettez votre glace 10 \u00e0 15 minutes avant et apr\u00e8s vos exercices.\n** Sur\u00e9levez votre jambe lorsque vous \u00eates au repos.\n** Pour l'enflure, mettre le bas \u00e9lastique selon les recommandations, \u00e0 retirer la nuit.\n** Si vous avez des agrafes, le CLSC communiquera avec vous dans les prochains jours\nafin de prendre rendez-vous pour le retrait.\n", "bounding_box": [[520, 1519], [3515, 1485], [3526, 2455], [531, 2490]]}];
+      
+        window.addEventListener('load', () => {
+            const image = document.getElementById("docImage");
+            if (image.complete) {
+              renderBBoxes();
+            } else {
+              image.addEventListener('load', renderBBoxes);
+            }
+          });
+
+        function renderBBoxes() {
+            const image = document.getElementById("docImage");
+            const bboxesContainer = document.getElementById("bboxes");
+            
+            const scaleY = image.clientHeight / ORIGINAL_HEIGHT;
+            const scaleX = scaleY ;
+          
+            const offsetY = image.offsetTop;  // image margin-top inside container
+            const offsetX = (image.clientWidth - scaleX * ORIGINAL_WIDTH)/2; // image margin-left inside container
+
+            blocks.forEach((block, i) => {
+              const div = document.createElement("div");
+              div.className = "bbox";
+              div.id = `bbox-${i}`;
+          
+              const x = block.bounding_box[0][0] * scaleX + offsetX;
+              const y = block.bounding_box[0][1] * scaleY + offsetY;
+              const width = (block.bounding_box[1][0] - block.bounding_box[0][0]) * scaleX;
+              const height = (block.bounding_box[2][1] - block.bounding_box[0][1]) * scaleY;
+          
+              div.style.left = `${x}px`;
+              div.style.top = `${y}px`;
+              div.style.width = `${width}px`;
+              div.style.height = `${height}px`;
+          
+              bboxesContainer.appendChild(div);
+            });
+        }
+      </script>
+      
     <script>
         function highlightBBox(index) {
             document.getElementById(`bbox-${index}`).classList.add("highlight");
