@@ -1,6 +1,5 @@
 .vscode/launch.json
-static/data/*.json
-static/data/*.csv
+static/data/0000/
 uploads/*.pdf
 __pycache__/*
 py/csn.py
