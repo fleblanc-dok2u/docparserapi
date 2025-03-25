@@ -1,137 +1,59 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DOK2U-Document AI</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 50px;
-        }
-        #drop-area {
-            border: 2px dashed #007bff;
-            padding: 30px;
-            width: 50%;
-            margin: auto;
-            cursor: pointer;
-            background-color: #f8f9fa;
-        }
-        #drop-area.highlight {
-            background-color: #e0e0e0;
-        }
-        #file-list {
-            margin-top: 20px;
-        }
-        .file-item {
-            padding: 5px;
-            background: #f1f1f1;
-            margin: 5px;
-            border-radius: 5px;
-        }
-        .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 3px solid #ccc;
-            border-top: 3px solid #000;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OCR Viewer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/ocr.css">
+
 </head>
 <body>
-
-    <h2>Drag and Drop Files</h2>
-    <div id="drop-area">
-        <p>Drop your files here or click to upload</p>
-        <input type="file" id="file-input" multiple hidden>
+  <div class="container-fluid">
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="tab" href="#editorTab">Text Editor</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#ocrTab">OCR Viewer</a>
+      </li>
+    </ul>
+    <div class="tab-content">
+      <div class="tab-pane fade show active" id="editorTab">
+        <textarea id="editor"></textarea>
+      </div>
+      <div class="tab-pane fade" id="ocrTab">
+        <div class="ocr-controls d-flex justify-content-between align-items-center">
+            <div>
+                <input type="file" id="ocrFile" accept="image/*,.pdf" hidden onchange="sendOCRFile(this.files[0])">
+                <button class="btn btn-success flex-fill" style="min-width: 120px;" onclick="document.getElementById('ocrFile').click()">Load</button>
+                <button class="btn btn-warning flex-fill" style="min-width: 120px;" onclick="copySelected()">Copy Text</button>
+                <button class="btn btn-primary flex-fill" style="min-width: 120px;" onclick="pageDown()">Page Down</button>
+                <button class="btn btn-primary flex-fill" style="min-width: 120px;" onclick="pageUp()">Page Up</button>
+            </div>
+            <div id="ocr-warning" class="ocr-warning d-none">Warnings will appear here.</div>
+        </div>
+        <div class="ocr-panel">
+          <div class="ocr-left">
+            <div id="bboxes"></div>
+            <img id="docImage" class="d-none" src="" alt="Document">
+          </div>
+          <div class="ocr-right">
+            <div id="ocrList"></div>
+          </div>
+        </div>
+      </div>
     </div>
-
-    <div id="file-list"></div>
-
-    <script>
-        const dropArea = document.getElementById('drop-area');
-        const fileInput = document.getElementById('file-input');
-        const fileList = document.getElementById('file-list');
-
-        // Prevent default drag behaviors
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false);
-        });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        // Highlight drop area when dragging over
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false);
-        });
-
-        // Handle file drop
-        dropArea.addEventListener('drop', (e) => {
-            let files = e.dataTransfer.files;
-            handleFiles(files);
-        });
-
-        // Handle file input selection
-        dropArea.addEventListener('click', (e) => {
-            fileInput.value = ""; // Reset input to ensure change event fires
-            fileInput.click()
-        });
-        fileInput.addEventListener('change', (e) => {
-            let files = e.target.files;
-            console.log(files)
-            handleFiles(files);
-        });
-
-        function handleFiles(files) {
-            [...files].forEach(uploadFile);
-        }
-
-        function uploadFile(file) {
-            let formData = new FormData();
-            formData.append("file", file);
-
-            let fileItem = document.createElement("div");
-            fileItem.className = "file-item";
-            fileItem.innerHTML = `📁 Uploading: ${file.name}... <span class="spinner"></span>`;
-            fileList.appendChild(fileItem);
-
-            fetch('/get_ocr', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data)
-                if (data.download_url) {
-                    fileItem.innerHTML = `✅ Uploaded: ${file.name} - <a href="${data.download_url}" target="_blank"> Download HTML</a>`;
-                } else {
-                    fileItem.textContent = `Error processing ${file.name} ❌`;
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                fileItem.textContent = `Error: ${file.name} ❌`;
-            });
-        }
-
-        
-    </script>
-
+  </div>
+  <div id="global-spinner" class="spinner-overlay d-none">
+    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.tiny.cloud/1/oaylrsrr6mfzv79xmqgpgefa5zl3mrku0f9s5oyoiooeai7n/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+  <script src="/static/js/ocr.js"></script>
+  
 </body>
 </html>

@@ -8,6 +8,8 @@ import io
 import mimetypes
 import re
 import pymupdf  # PyMuPDF
+from datetime import datetime
+
 
 from py.saveLayout import  generate_html_with_bboxes # Assuming extractTable.py contains parse_document and extract_tables functions
 from google.cloud import documentai_v1beta3 as documentai
@@ -184,31 +186,24 @@ def get_document_ocr(file_path,output_path):
     document = result.document  # Document AI output
     
     # Extract text, bounding boxes, and page numbers
-    structured_data = extract_text_blocks_and_tables(document,output_path)
+    structured_data = extract_text_blocks_and_tables_and_images(document,output_path)
+
     #Save layout
     json_path = os.path.join(output_path, f"layout.json")
     with open(json_path, "w", encoding="utf-8") as json_file:
         json.dump(structured_data, json_file, indent=4, ensure_ascii=False)
+    return structured_data
 
-    # Extract images
-    image_paths = save_extracted_images(document, output_path)
-
-    html_path = os.path.join(output_path, f"output.html")
-    img_path = os.path.join(output_path,image_paths[0])
-    
-    # saveLayout.generate_html_from_structure(structured_data, image_paths, html_path)
-    generate_html_with_bboxes(structured_data, img_path, html_path,f"templates/viewer.html")
-    
-    return html_path
+ 
 
 # Function to extract text, blocks, and tables from the OCR response
-def extract_text_blocks_and_tables(document, output_folder):
+def extract_text_blocks_and_tables_and_images(document, output_folder):
     """
     Extracts structured text (blocks) and tables from the OCR response.
     Returns a dictionary containing 'blocks' and 'tables'.
     """
     text = document.text  # Full text of the document
-    structured_data = {"blocks": [], "tables": []}
+    structured_data = {"blocks": [], "tables": [], "images": []}
 
     for page in document.pages:
         page_number = page.page_number
@@ -242,30 +237,21 @@ def extract_text_blocks_and_tables(document, output_folder):
                 "table": table_data,
                 "bounding_box": [(v.x, v.y) for v in table.layout.bounding_poly.vertices]
             })
-
+            
+        if page.image.content:
+            image_path = save_base64_image(page.image.content, output_folder, f"page_{page_number}",page.image.mime_type)
+            structured_data["images"].append({
+                "page": page_number,
+                "path": image_path,
+                "width": page.image.width,
+                "height": page.image.height,
+                "mim_type": page.image.mime_type
+            })
+            
     return structured_data
 
 
-# Function to save extracted images from Document AI output
-def save_extracted_images(document, output_folder):
-    """
-    Extracts and saves all images from the Document AI OCR response.
-
-    Parameters:
-    - document (dict): The JSON response from Document AI.
-    - output_folder (str): Directory to save extracted images.
-
-    Returns:
-    - list: Paths of saved images.
-    """
-    extracted_images = []
-    for page_index, page in enumerate(document.pages, start=1):
-        if page.image.content:
-            image_path = save_base64_image(page.image.content, output_folder, f"page_{page_index}",page.image.mime_type)
-            extracted_images.append(image_path)
-    return extracted_images
-
-def save_base64_image(image_base64, output_folder, filename, mime_type):
+def save_base64_image(image_base64, output_folder, fileprefix, mime_type):
     """
     Decodes and saves a base64 image from Document AI response, handling multiple image formats.
 
@@ -302,13 +288,15 @@ def save_base64_image(image_base64, output_folder, filename, mime_type):
         # Get the correct extension, default to PNG if unknown
         format_name, extension = mime_map.get(mime_type.lower(), ("PNG", "png"))  # Default to PNG
 
+        # Get current timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         # Save image with detected format
-        image_filename =  f"{filename}.{extension}"
+        image_filename =  f"{fileprefix}_{timestamp}.{extension}"
         image_path = os.path.join(output_folder, image_filename)
         image.save(image_path, format_name.upper())
         print(f"Saving Image: {image_filename}")
 
-        return image_filename
+        return image_path
 
     except Exception as e:
         print(f"Unexpected error: {e}")

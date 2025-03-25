@@ -1,0 +1,77 @@
+body {
+    background-color: #f8f9fa;
+  }
+  .ocr-controls {
+    background: #f0f0f0;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    min-height:45px;
+  }
+  .ocr-panel {
+    display: flex;
+    height: calc(100vh - 180px);
+  }
+  .ocr-left {
+    flex: 1;
+    position: relative;
+    padding: 10px;
+    overflow: auto;
+  }
+  .ocr-left img {
+    width: 100%;
+    height: auto;
+  }
+  .ocr-right {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    border-left: 1px solid #ddd;
+  }
+  .bbox {
+    position: absolute;
+    border: 2px solid red;
+    background: rgba(255, 0, 0, 0.1);
+    pointer-events: auto; /* Enable hover, click */
+  }
+  .ocr-block {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 8px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s, border-color 0.2s;
+  }
+  .form-check-input{
+      border: solid 1px;
+  }
+  .ocr-block:hover {
+      background-color: #f0f8ff;
+      border-color: #007bff;
+  }
+  .bbox.highlight {
+      border-color: #007bff;
+      background: rgba(0, 123, 255, 0.2);
+  }   
+  .ocr-block.highlight {
+      background-color: #e0f0ff;
+      border-color: #007bff;
+  }   
+  .ocr-warning {
+    padding: 5px;
+    background-color: #ffe9e9;
+    color: #900;
+    font-size: 0.9em;
+    border-top: 1px solid #f99;
+  }
+  .spinner-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1050; /* higher than Bootstrap modals */
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(255, 255, 255, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+    }

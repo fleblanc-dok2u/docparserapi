@@ -71,7 +71,7 @@
             "text": "** Prenez vos calmants au besoin.\n",
             "bounding_box": [
                 [
-                    518,
+                    517,
                     1388
                 ],
                 [
@@ -83,7 +83,7 @@
                     1439
                 ],
                 [
-                    518,
+                    517,
                     1447
                 ]
             ]
@@ -111,5 +111,14 @@
             ]
         }
     ],
-    "tables": []
+    "tables": [],
+    "images": [
+        {
+            "page": 1,
+            "path": "static/data/0000/page_1_20250325_144232.jpg",
+            "width": 4032,
+            "height": 3024,
+            "mim_type": "image/jpeg"
+        }
+    ]
 }

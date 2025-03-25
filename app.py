@@ -112,15 +112,7 @@ def get_ocr():
         mime_type = mimetypes.guess_type(file_path)[0]  # Detect MIME type
 
         # Step 3: Parse document using Google Document AI
-        html_path = get_document_ocr(file_path,user_path)
-
-        # Step 4: Return JSON response with file details and download link
-        response_data = {
-            "file_name": uploaded_file.filename,
-            "file_size_bytes": file_size,
-            "mime_type": mime_type,
-            "download_url": html_path
-        }
+        response_data = get_document_ocr(file_path,user_path)
 
         return jsonify(response_data)
     
