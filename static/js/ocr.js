@@ -1,6 +1,17 @@
     let ocrData = null;
     let currentPage = 0;
+    let pageImage= null;
+    let pageBlocks= null;
+    let usercode = Math.floor(100000 + Math.random() * 900000).toString();
 
+    window.addEventListener('resize', () => {
+        console.log('resize')
+        if (ocrData && pageBlocks && pageImage) {
+            document.getElementById('bboxes').innerHTML = '';
+            renderBBoxes(pageBlocks,pageImage);
+        }
+      });
+      
     tinymce.init({
       selector: '#editor',
       height: '90vh',
@@ -10,12 +21,19 @@
     });
 
     function sendOCRFile(file) {
+
+
         ocrData = null;
         currentPage = 0;    
         // Show spinner
         document.getElementById("global-spinner").classList.remove("d-none");
+        //Get file
         const formData = new FormData();
         formData.append("file", file);
+
+        // Send user digit code
+        formData.append("code", usercode);
+
         fetch('/get_ocr', {
             method: 'POST',
             body: formData
@@ -49,8 +67,8 @@
             return;
         }
 
-        const pageImage = ocrData.images[currentPage];
-        const pageBlocks = ocrData.blocks.filter(block => block.page === pageImage.page);
+        pageImage = ocrData.images[currentPage];
+        pageBlocks = ocrData.blocks.filter(block => block.page === pageImage.page);
       
         const img = document.getElementById('docImage');
         img.onload = () => {
@@ -72,27 +90,40 @@
 
         const container = document.getElementById('ocrList');
         container.innerHTML = '';
-        blocks.forEach((block, i) => {
-          const div = document.createElement('div');
-          div.className = 'ocr-block';
-          div.id = `ocr-block-${i}`; // ID for linking
+        // Add Select All checkbox
+        const selectAll = document.createElement('div');
+        selectAll.className = 'form-check mb-2';
+        selectAll.innerHTML = `
+        <input class="form-check-input" type="checkbox" id="selectAllCheckbox" onchange="toggleAllCheckboxes(this)">
+        <label class="form-check-label fw-bold" for="selectAllCheckbox">Select All</label>
+        `;
+        container.appendChild(selectAll);
 
-          div.innerHTML = `
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="check${i}" data-index="${i}">
-              <label class="form-check-label" for="check${i}">${block.text}</label>
-            </div>
-          `;
-          div.setAttribute('onmouseenter', `highlightBBox(${i})`);
-          div.setAttribute('onmouseleave', `unhighlightBBox(${i})`);  
-  
-          container.appendChild(div);
+        blocks.forEach((block, i) => {
+            const div = document.createElement('div');
+            div.className = 'ocr-block';
+            div.id = `ocr-block-${i}`; // ID for linking
+
+            div.innerHTML = `
+                <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="check${i}" data-index="${i}">
+                <label class="form-check-label" for="check${i}">${block.text}</label>
+                </div>
+            `;
+            div.setAttribute('onmouseenter', `highlightBBox(${i})`);
+            div.setAttribute('onmouseleave', `unhighlightBBox(${i})`);  
+    
+            container.appendChild(div);
         });
 
      }
       
-
-      function renderBBoxes(blocks, pageImage) {
+    function toggleAllCheckboxes(masterCheckbox) {
+        const checkboxes = document.querySelectorAll('#ocrList input.form-check-input:not(#selectAllCheckbox)');
+        checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+    }
+      
+    function renderBBoxes(blocks, pageImage) {
         const image = document.getElementById("docImage");
         const bboxesContainer = document.getElementById("bboxes");
         
@@ -158,9 +189,9 @@
         } else {
             showWarningMessage("You're already on the first page.");
         }
-      }
+    }
       
-      function pageDown() {
+    function pageDown() {
         if (!ocrData || !ocrData.images) return;
         if (currentPage < ocrData.images.length - 1) {
           currentPage++;
@@ -168,10 +199,11 @@
         } else {
             showWarningMessage("You're already on the last page.");
         }
-      }
-      
+    }
+
+
     function showWarningMessage(message) {
         const footer = document.getElementById("ocr-warning");
         footer.textContent = message;
         footer.classList.remove("d-none");
-      }
+    }

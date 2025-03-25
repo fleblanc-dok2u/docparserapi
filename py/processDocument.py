@@ -18,15 +18,15 @@ from google.cloud import documentai_v1beta3 as documentai
 from typing import Optional, Sequence
 
 # Set your Google Cloud project details
-PROJECT_ID = "373815688414"
+PROJECT_ID = "224181475341"
 LOCATION = "us"  # Change based on your region (us, eu, asia)
-LAYOUT_PROCESSOR_ID = "c07a954868a2e329"  # Get from Document AI Console
-OCR_PROCESSOR_ID = "49cd9e89ceca3557"  # Get from Document AI Console
+LAYOUT_PROCESSOR_ID = "4ca554ec865b513f"  # Get from Document AI Console
+OCR_PROCESSOR_ID = "3aa9a60af5830b28"  # Get from Document AI Console
 
-# https://us-documentai.googleapis.com/v1/projects/373815688414/locations/us/processors/c07a954868a2e329:process
-# https://us-documentai.googleapis.com/v1/projects/373815688414/locations/us/processors/49cd9e89ceca3557:process
+# https://us-documentai.googleapis.com/v1/projects/224181475341/locations/us/processors/3aa9a60af5830b28:process
+# https://us-documentai.googleapis.com/v1/projects/224181475341/locations/us/processors/4ca554ec865b513f:process
 # Authenticate using service account
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "../vosker-b01eff5a44f3.json"
+# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "../vosker-b01eff5a44f3.json"
 
 def convert_image_to_pdf(image_path):
     """Convert an image (JPG, PNG) to a single-page PDF."""
@@ -189,9 +189,9 @@ def get_document_ocr(file_path,output_path):
     structured_data = extract_text_blocks_and_tables_and_images(document,output_path)
 
     #Save layout
-    json_path = os.path.join(output_path, f"layout.json")
-    with open(json_path, "w", encoding="utf-8") as json_file:
-        json.dump(structured_data, json_file, indent=4, ensure_ascii=False)
+    # json_path = os.path.join(output_path, f"layout.json")
+    # with open(json_path, "w", encoding="utf-8") as json_file:
+    #     json.dump(structured_data, json_file, indent=4, ensure_ascii=False)
     return structured_data
 
  
