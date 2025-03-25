@@ -4,6 +4,7 @@
     let pageBlocks= null;
     let usercode = Math.floor(100000 + Math.random() * 900000).toString();
 
+    alert("Dev")
     window.addEventListener('resize', () => {
         console.log('resize')
         if (ocrData && pageBlocks && pageImage) {
