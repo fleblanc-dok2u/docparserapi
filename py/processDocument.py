@@ -24,7 +24,7 @@ OCR_PROCESSOR_ID = "3aa9a60af5830b28"  # Get from Document AI Console
 # https://us-documentai.googleapis.com/v1/projects/224181475341/locations/us/processors/3aa9a60af5830b28:process
 # https://us-documentai.googleapis.com/v1/projects/224181475341/locations/us/processors/4ca554ec865b513f:process
 # Authenticate using service account
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "../dok2u-sante-26dbdd75e5d7.json"
+# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "../dok2u-sante-26dbdd75e5d7.json"
 
 
 def split_pdf(input_pdf, output_folder, max_pages=10):
