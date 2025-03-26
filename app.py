@@ -11,7 +11,7 @@ import io
 
 # Ensure we can import extractTable from the "py" folder
 # from py.processDocument import get_document_layout
-from py.processDocument import get_document_ocr,get_document_layout  # Assuming extractTable.py contains parse_document and extract_tables functions
+from py.processDocument import get_document_ocr,get_pdf_ocr  # Assuming extractTable.py contains parse_document and extract_tables functions
 
 
 
@@ -21,9 +21,14 @@ OUTPUT_PATH = "static/data"
 
 app = Flask(__name__)
 
-# def generate_random_string(n, chars=string.ascii_letters + string.digits):
-#     # Generate a random string with N characters.
-#     return ''.join(random.choices(string.digits, k=n))
+def clear_folder(folder_path):
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        try:
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            print(f"Error deleting {file_path}: {e}")
 
 @app.route("/")
 def home():
@@ -44,19 +49,30 @@ def get_ocr():
         if "file" not in request.files:
             return jsonify({"error": "No file uploaded"}), 400
         
-        code = request.form.get('code')  # this is your 6-digit code
+        code = request.form.get('sessionid')  # this is your 6-digit code
 
         # Create user folder with specific id
         user_path = OUTPUT_PATH+"/"+code+"/"
         os.makedirs(user_path, exist_ok=True)  # Ensure output folder exists
-
+        
+        # Clear folder
+        clear_folder(user_path)
+        
         # Upload files ans save it on the server
         uploaded_file = request.files["file"]
         file_path = os.path.join(user_path, uploaded_file.filename)
         uploaded_file.save(file_path)
-
+        
+        # Determine MIME type based on file extension
+        mime_type, _ = mimetypes.guess_type(file_path)
+        if mime_type is None:
+            raise ValueError(f"Unsupported file type for file: {file_path}")
+        
         # Parse document using Google Document AI
-        response_data = get_document_ocr(file_path,user_path)
+        if(mime_type=="application/pdf"):
+            response_data = get_pdf_ocr(file_path,user_path)
+        else:
+            response_data = get_document_ocr(file_path,user_path)
 
         return jsonify(response_data)
     

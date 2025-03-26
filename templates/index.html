@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OCR Viewer</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/ocr.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Viewer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/ocr.css">
 </head>
 <body>
   <div class="container-fluid">
@@ -20,23 +21,45 @@
     </ul>
     <div class="tab-content">
       <div class="tab-pane fade show active" id="editorTab">
-        <textarea id="editor"></textarea>
+        <div id="editor" class="editor-panel"></div>
       </div>
       <div class="tab-pane fade" id="ocrTab">
         <div class="ocr-controls d-flex justify-content-between align-items-center">
             <div>
+                <!-- Hidden file input -->
                 <input type="file" id="ocrFile" accept="image/*,.pdf" hidden onchange="sendOCRFile(this.files[0])">
-                <button class="btn btn-success flex-fill" style="min-width: 120px;" onclick="document.getElementById('ocrFile').click()">Load</button>
-                <button class="btn btn-warning flex-fill" style="min-width: 120px;" onclick="copySelected()">Copy Text</button>
-                <button class="btn btn-primary flex-fill" style="min-width: 120px;" onclick="pageDown()">Page Down</button>
-                <button class="btn btn-primary flex-fill" style="min-width: 120px;" onclick="pageUp()">Page Up</button>
+
+                <!-- Button row -->
+                <div class="d-flex gap-2">
+                    <button class="btn btn-success flex-fill" style="min-width: 40px;" onclick="document.getElementById('ocrFile').click()" title="Load File">
+                        <i class="bi bi-upload"></i>
+                    </button>
+                      
+                    <button class="btn btn-primary flex-fill" style="min-width: 40px;" onclick="pageDown()" title="Next Page">
+                        <i class="bi bi-arrow-down"></i>
+                    </button>
+
+                    <button class="btn btn-primary flex-fill" style="min-width: 40px;" onclick="pageUp()" title="Previous Page">
+                        <i class="bi bi-arrow-up"></i>
+                    </button>
+                    
+                    <button class="btn btn-warning flex-fill" style="min-width: 40px;" onclick="copySelected()" title="Copy Selected Text">
+                        <i class="bi bi-clipboard"></i>
+                    </button>
+
+                    <button class="btn btn-info flex-fill" style="min-width: 40px;" onclick="enableAreaSelection()" title="Select Image Area to Copy">
+                        <i class="bi bi-scissors"></i>
+                    </button>
+
+                </div>
             </div>
             <div id="ocr-warning" class="ocr-warning d-none">Warnings will appear here.</div>
         </div>
         <div class="ocr-panel">
           <div class="ocr-left">
             <div id="bboxes"></div>
-            <img id="docImage" class="d-none" src="" alt="Document">
+            <div id="selection-box" class="ocr-selection-box"></div>
+            <img id="docImage" class="d-none" src="" alt="Page Image" draggable="false">
           </div>
           <div class="ocr-right">
             <div id="ocrList"></div>
@@ -51,9 +74,9 @@
     </div>
   </div>
   
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.tiny.cloud/1/oaylrsrr6mfzv79xmqgpgefa5zl3mrku0f9s5oyoiooeai7n/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
-  <script src="/static/js/ocr.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+    <script src="/static/js/ocr.js"></script>
   
 </body>
 </html>

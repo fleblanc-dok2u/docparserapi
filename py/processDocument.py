@@ -10,10 +10,8 @@ import re
 import pymupdf  # PyMuPDF
 from datetime import datetime
 
-
 from py.saveLayout import  generate_html_with_bboxes # Assuming extractTable.py contains parse_document and extract_tables functions
 from google.cloud import documentai_v1beta3 as documentai
-
 
 from typing import Optional, Sequence
 
@@ -26,14 +24,8 @@ OCR_PROCESSOR_ID = "3aa9a60af5830b28"  # Get from Document AI Console
 # https://us-documentai.googleapis.com/v1/projects/224181475341/locations/us/processors/3aa9a60af5830b28:process
 # https://us-documentai.googleapis.com/v1/projects/224181475341/locations/us/processors/4ca554ec865b513f:process
 # Authenticate using service account
-# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "../vosker-b01eff5a44f3.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "../dok2u-sante-26dbdd75e5d7.json"
 
-def convert_image_to_pdf(image_path):
-    """Convert an image (JPG, PNG) to a single-page PDF."""
-    pdf_path = image_path.rsplit(".", 1)[0] + ".pdf"  # Convert to PDF filename
-    image = Image.open(image_path)  # Open image
-    image.convert("RGB").save(pdf_path)  # Save as PDF
-    return pdf_path
 
 def split_pdf(input_pdf, output_folder, max_pages=10):
     """Splits a large PDF into smaller PDFs with max_pages per chunk."""
@@ -56,56 +48,8 @@ def get_pdf_page_count(pdf_path):
     return len(doc)  # Get total number of pages
 
 
-def adjust_blockid_and_pages(blocks, block_offset, page_offset):
+def get_pdf_ocr(file_path,output_path):
     
-    stack = blocks[:]  # Initialize stack with the top-level blocks
-    max_block_id=0;
-    while stack:
-        block = stack.pop()  # Get the last element in stack (LIFO)
-        block["blockId"] = str(int(block["blockId"]) + block_offset)
-        block["pageSpan"]["pageStart"] += page_offset
-        block["pageSpan"]["pageEnd"] += page_offset
-        max_block_id = max(max_block_id,int(block["blockId"]))
-            
-        # If the block contains sub-blocks, process them recursively
-        text_block = block.get("textBlock", {})
-        if "blocks" in text_block:
-            stack.extend(reversed(text_block["blocks"]))  # Reverse to maintain order
-
-        # If the block is inside a table, iterate over table blocks
-        if "tableBlock" in block:
-            for row in block["tableBlock"].get("bodyRows", []):
-                for cell in row.get("cells", []):
-                    stack.extend(reversed(cell.get("blocks", [])))
-                    
-    return max_block_id
-
-def save_all_images_in_pdf(file_path,output_path):
-    #Save all images   
-    file_list=[]
-    doc = pymupdf.open(file_path)  # Open the PDF file
-    for page_number, page in enumerate(doc, start=1):
-        for img_index, img in enumerate(page.get_images(full=True), start=1):
-            xref = img[0]  # Image reference
-                
-            base_image = doc.extract_image(xref)  # Extract image
-            image_bytes = base_image["image"]  # Get image bytes
-            image_ext = base_image["ext"]  # Get image extension (e.g., 'png', 'jpeg')
-
-            image_filename = f"page_{page_number}_img_{img_index}.{image_ext}"
-            image_path = os.path.join(output_path, image_filename)
-
-            with open(image_path, "wb") as img_file:
-                img_file.write(image_bytes)  # Save image file
-
-            file_list.append(image_path)
-            print(f"Extracted: {image_filename}")   
-    return file_list
-
-def get_document_layout(file_path,output_path):
-    
-    file_list = []
-
     # Initialize Document AI client
     client = documentai.DocumentProcessorServiceClient()
     mime_type="application/pdf"
@@ -114,9 +58,8 @@ def get_document_layout(file_path,output_path):
     folder_name = os.path.dirname(file_path)
     chunck_list = split_pdf(file_path,folder_name,10)
     
-    blocks_list = []
+    structured_data = {"blocks": [], "tables": [], "images": []}
     global_page_offset = 0
-    global_block_offset= 0
     for chunk_index, chunk_file in enumerate(chunck_list):
         # Read file as binary
         with open(chunk_file, "rb") as file:
@@ -126,36 +69,34 @@ def get_document_layout(file_path,output_path):
         raw_document = documentai.RawDocument(content=file_content, mime_type=mime_type)
 
         # Configure layout request
-        processor_name = f"projects/{PROJECT_ID}/locations/{LOCATION}/processors/{LAYOUT_PROCESSOR_ID}"
+        processor_name = f"projects/{PROJECT_ID}/locations/{LOCATION}/processors/{OCR_PROCESSOR_ID}"
         request = documentai.ProcessRequest(name=processor_name, raw_document=raw_document)
         
         # Send request
         chunk_result  = client.process_document(request=request)
 
         # Parse response
-        layout_document = chunk_result.document
-        new_block_list = [MessageToDict(block._pb) for block in layout_document.document_layout.blocks]
-
+        document = chunk_result.document  # Document AI output
+    
+        # Extract text, bounding boxes, and page numbers
+        new_block_dict = extract_text_blocks_and_tables_and_images(document,global_page_offset,output_path)
+        
         # Update blockid and page offset to maintain global numbering
-        global_block_offset = adjust_blockid_and_pages(new_block_list,global_block_offset,global_page_offset)
         global_page_offset += get_pdf_page_count(chunk_file)
-        blocks_list.append(new_block_list)
+        
+        for key in ["blocks", "tables", "images"]:
+            structured_data[key].extend(new_block_dict[key])
+
    
     #Save layout
-    json_path = os.path.join(output_path, f"layout.json")
-    file_list.append(json_path)  
-    with open(json_path, "w", encoding="utf-8") as json_file:
-        json.dump(blocks_list, json_file, indent=4, ensure_ascii=False)
-     
-    #Save all images. Note it cannot extract Vector-based images 
-    file_list += save_all_images_in_pdf(file_path,output_path)  
-             
-    return file_list
+    # json_path = os.path.join(output_path, f"layout.json")
+    # file_list.append(json_path)  
+    # with open(json_path, "w", encoding="utf-8") as json_file:
+    #     json.dump(blocks_list, json_file, indent=4, ensure_ascii=False)
+    return structured_data
 
 def get_document_ocr(file_path,output_path):
     
-    file_list = []
-
     # Initialize Document AI client
     client = documentai.DocumentProcessorServiceClient()
     
@@ -186,7 +127,7 @@ def get_document_ocr(file_path,output_path):
     document = result.document  # Document AI output
     
     # Extract text, bounding boxes, and page numbers
-    structured_data = extract_text_blocks_and_tables_and_images(document,output_path)
+    structured_data = extract_text_blocks_and_tables_and_images(document,0,output_path)
 
     #Save layout
     # json_path = os.path.join(output_path, f"layout.json")
@@ -197,7 +138,7 @@ def get_document_ocr(file_path,output_path):
  
 
 # Function to extract text, blocks, and tables from the OCR response
-def extract_text_blocks_and_tables_and_images(document, output_folder):
+def extract_text_blocks_and_tables_and_images(document, page_offset, output_folder):
     """
     Extracts structured text (blocks) and tables from the OCR response.
     Returns a dictionary containing 'blocks' and 'tables'.
@@ -206,7 +147,7 @@ def extract_text_blocks_and_tables_and_images(document, output_folder):
     structured_data = {"blocks": [], "tables": [], "images": []}
 
     for page in document.pages:
-        page_number = page.page_number
+        page_number = page.page_number+page_offset
 
         # Extract text blocks
         for block in page.blocks:
