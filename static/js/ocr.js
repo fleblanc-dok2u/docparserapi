@@ -19,8 +19,14 @@ window.addEventListener('resize', () => {
 
 // Initialize Quill editor
 const quill = new Quill('#editor', {
-  theme: 'snow'
+    modules: {
+        syntax: true,
+        toolbar: '#toolbar-container',
+      },
+      placeholder: 'Write text...',
+      theme: 'snow',
 });
+
 
 // Send file to backend for OCR
 function sendOCRFile(file) {
@@ -72,7 +78,9 @@ function renderPage() {
     img.classList.remove('d-none');
     renderSections(pageBlocks);
     renderBBoxes(pageBlocks, pageImage);
+    //drawTextBlocksAsTextAreas(pageBlocks, pageImage); // 👈 Add this line
   };
+
   img.onerror = () => {
     img.classList.add('d-none');
   };
@@ -105,6 +113,7 @@ function renderSections(blocks) {
     `;
     div.setAttribute('onmouseenter', `highlightBBox(${i})`);
     div.setAttribute('onmouseleave', `unhighlightBBox(${i})`);
+    div.addEventListener('click', () => showToolAtBBox(i));
     container.appendChild(div);
   });
 }
@@ -122,7 +131,7 @@ function renderBBoxes(blocks, pageImage) {
   const scaleX = image.clientWidth / pageImage.width;
   const scaleY = scaleX;
   const offsetY = image.offsetTop;
-  const offsetX = (image.clientWidth - scaleX * pageImage.width) / 2;
+  const offsetX = image.offsetLeft; //(image.clientWidth - scaleX * pageImage.width) / 2;
 
   bboxesContainer.innerHTML = '';
   blocks.forEach((block, i) => {
@@ -284,4 +293,220 @@ function showWarningMessage(message) {
   warning.textContent = message;
   warning.classList.remove("d-none");
   setTimeout(() => warning.classList.add("d-none"), 5000);
+}
+
+function drawTextBlocksAsTextAreas(blocks, pageImage) {
+  const image = document.getElementById("docImage");
+  const container = document.querySelector(".ocr-right");
+
+  // Clear previous textareas
+  document.querySelectorAll('.ocr-textarea').forEach(el => el.remove());
+
+  const scaleX = image.clientWidth / pageImage.width;
+  const scaleY = scaleX;
+  const paddingX=5
+  const paddingY=5
+  // Create temporary canvas for text measurement
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  blocks.forEach((block, i) => {
+    if (!block.text || block.text.trim() === "") return;
+
+    const bbox = block.bounding_box;
+
+    // Handle line breaks
+    const lines = block.text.split('\n').filter(line => line.trim().length > 0);
+
+
+    const x = bbox[0][0] * scaleX;
+    const y = bbox[0][1] * scaleY;
+    const width =  (bbox[1][0] - bbox[0][0]) * scaleX;
+    const height =  (bbox[2][1] - bbox[0][1]) * scaleY;
+
+    // Fit text inside bounding box
+    const fontSize = getFittingFontSize(ctx, lines, width, height);
+    const textarea = document.createElement("textarea");
+    textarea.className = "ocr-textarea";
+    textarea.value = block.text.replace(/\n+$/, '');;
+    textarea.style.position = "absolute";
+    textarea.style.left = `${x}px`;
+    textarea.style.top = `${y}px`;
+
+    textarea.style.width = `${width}px`;
+    textarea.style.height = `${height}px`;
+    textarea.style.border = "1px solid #666";
+    textarea.style.padding = `0px`;
+    textarea.style.backgroundColor = "rgba(255,255,255,0.8)";
+    textarea.style.fontSize = `${fontSize}px`;
+    textarea.style.fontFamily = "Arial";
+
+    container.appendChild(textarea);
+    autoResizeTextarea(textarea,height+fontSize);
+    makeTextareaDraggable(textarea, {
+      gridSize: 5,
+      container: document.querySelector('.ocr-right')
+    });
+
+    // const div = document.createElement("div");
+    // div.className = "editor-block editable-block";
+    // div.dataset.index = i;
+    // div.style.position = "absolute";
+    // div.style.left = `${x}px`;
+    // div.style.top = `${y}px`;
+    // div.style.width = `${width}px`;
+    // div.style.minHeight = `${height}px`;
+    // div.style.overflow = "hidden";
+    // div.style.background = "rgba(255,255,255,0.8)";
+    // div.style.border = "1px solid #666";
+    // div.style.padding = "4px";
+    // div.style.cursor = "pointer";
+    // div.style.fontSize = `${fontSize}px`;
+    // div.style.fontFamily = "Arial";
+    // div.innerHTML = block.text.replace(/\n+$/, '').replace(/\n/g, "<br>");
+    // div.addEventListener("click", () => activateEditorOnDiv(div, block));
+    // container.appendChild(div);
+    
+
+  });
+}
+
+// 🔧 Adjust font size to fit text into bbox
+function getFittingFontSize(ctx, lines, maxWidth, maxHeight) {
+  // ✅ Remove empty or whitespace-only lines
+  const lineCount = lines.length;
+
+  let fontSize = 20;
+
+  while (fontSize > 4) {
+    ctx.font = `${fontSize}px Arial`;
+
+    const fitsHorizontally = lines.every(line => ctx.measureText(line).width <= maxWidth);
+    const fitsVertically = fontSize * lineCount <= maxHeight;
+
+    if (fitsHorizontally && fitsVertically) {
+      break;
+    }
+
+    fontSize -= 1;
+  }
+
+  return fontSize;
+}
+function autoResizeTextarea(textarea, maxHeight = 1000) {
+  let newHeight = textarea.scrollHeight;
+
+  // Optional: incrementally grow (more visually gradual)
+  while (textarea.scrollHeight > textarea.clientHeight && newHeight < maxHeight) {
+    newHeight += 2;
+    textarea.style.height = `${newHeight}px`;
+  }
+
+  // Set final height
+  textarea.style.height = `${newHeight+2}px`;
+}
+
+function makeTextareaDraggable(textarea, options = {}) {
+  const {
+    gridSize = 10,
+    container = document.querySelector('.ocr-right'),
+  } = options;
+
+  let offsetX = 0, offsetY = 0;
+  let isDragging = false;
+
+  textarea.style.cursor = 'move';
+  textarea.style.position = 'absolute';
+  console.log('Container:', container.getBoundingClientRect());
+  console.log('Textarea offset:', textarea.offsetLeft, textarea.offsetTop);
+
+  textarea.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    const containerRect = container.getBoundingClientRect();
+    offsetX = e.clientX - containerRect.left - textarea.offsetLeft;
+    offsetY = e.clientY - containerRect.top - textarea.offsetTop;
+    console.log('e.client:',  e.clientX, e.clientY);
+    console.log('offset:', offsetX, offsetY);
+
+    textarea.style.zIndex = 1000;
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+
+    // Calculate new position
+    const containerRect = container.getBoundingClientRect();
+    const newX = Math.max(0, Math.min(container.clientWidth - textarea.offsetWidth, e.clientX - containerRect.left - offsetX));
+    const newY = Math.max(0, Math.min(container.clientHeight - textarea.offsetHeight, e.clientY - containerRect.top - offsetY));
+
+    // Snap to grid
+    const snappedX = Math.round(newX / gridSize) * gridSize;
+    const snappedY = Math.round(newY / gridSize) * gridSize;
+
+    textarea.style.left = `${snappedX}px`;
+    textarea.style.top = `${snappedY}px`;
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+    }
+  });
+}
+
+
+let activeEditor = null;
+
+function activateEditorOnDiv(div, block) {
+  if (activeEditor) return; // Prevent multiple editors
+
+  const container = document.createElement("div");
+  const holderId = `editor-${Date.now()}`;
+  container.id = holderId;
+  container.className = "editor-block";
+  container.style.position = "absolute";
+  container.style.left = div.style.left;
+  container.style.top = div.style.top;
+  container.style.width = div.style.width;
+  container.style.minHeight = div.style.minHeight;
+  container.style.padding = div.style.padding;
+  container.style.border = div.style.border;
+  container.style.background = div.style.background;
+
+  div.replaceWith(container);
+
+  activeEditor = new EditorJS({
+    holder: holderId,
+    tools: {
+      bold: window.Bold,
+      italic: window.Italic,
+      underline: window.Underline
+    },
+    inlineToolbar: ['bold', 'italic', 'underline'],
+    data: {
+      blocks: [{
+        type: "text",
+        data: { text: block.text.replace(/\n+$/, '').replace(/\n/g, "<br>") }
+      }]
+    },
+    onReady: () => {
+      const editorDOM = container.querySelector('[contenteditable]');
+      editorDOM.focus();
+    },
+    onBlur: async () => {
+      const saved = await activeEditor.save();
+      const html = saved.blocks.map(b => b.data.text).join("<br>");
+      block.text = saved.blocks.map(b => b.data.text).join("\n");
+
+      const restoredDiv = document.createElement("div");
+      restoredDiv.className = "editor-block editable-block";
+      restoredDiv.style.cssText = container.style.cssText;
+      restoredDiv.innerHTML = html;
+      restoredDiv.addEventListener("click", () => activateEditorOnDiv(restoredDiv, block));
+
+      container.replaceWith(restoredDiv);
+      activeEditor = null;
+    }
+  });
 }

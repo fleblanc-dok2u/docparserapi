@@ -2,3 +2,4 @@
 static/data/*
 !static/data/base.txt
 py/__pycache__/*
+/__pycache__/*

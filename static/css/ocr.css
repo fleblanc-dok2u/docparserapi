@@ -20,10 +20,15 @@ body {
     position: relative;
     padding: 10px;
     overflow: auto;
+    
   }
   .ocr-left img {
     width: 100%;
     height: auto;
+  }
+  
+  .ocr-textarea:focus {
+    outline: 2px solid #007bff;
   }
   .ocr-selection-box {
     position: absolute;
@@ -38,6 +43,8 @@ body {
     padding: 10px;
     overflow-y: auto;
     border-left: 1px solid #ddd;
+    position: relative;
+
   }
   .bbox {
     position: absolute;
@@ -86,4 +93,18 @@ body {
       align-items: center;
       justify-content: center;
       pointer-events: auto;
+    }
+    .floating-toolbar {
+      position: absolute;
+      background: white;
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    }
+    .d-none {
+      display: none;
+    }
+    .editable-block {
+      white-space: pre-wrap;
     }

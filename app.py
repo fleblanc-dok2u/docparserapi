@@ -44,6 +44,7 @@ def create_app():
     @app.route("/")
     def home():
         """Serve the HTML page."""
+        # return render_template("editor.html")
         return render_template("index.html")
 
 
