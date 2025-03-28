@@ -1,44 +1,25 @@
-body {
+  body {
     background-color: #f8f9fa;
   }
-  .ocr-controls {
-    background: #f0f0f0;
-    padding: 10px;
-    border-bottom: 1px solid #ccc;
-    min-height:45px;
+  
+  #editor-wrapper {
+    height: calc(100vh - 120px);
+    display: flex;
+    flex-direction: column;
   }
-  .editor-panel {
-    height: calc(100vh - 100px);
-  }
+
+  #editorjs {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }  
   .ocr-panel {
     display: flex;
-    height: calc(100vh - 120px);
+    height: calc(100vh - 100px);
 
-  }
-  .ocr-left {
-    flex: 1;
-    position: relative;
-    padding: 10px;
-    overflow: auto;
-    
-  }
-  .ocr-left img {
-    width: 100%;
-    height: auto;
   }
   
-  .ocr-textarea:focus {
-    outline: 2px solid #007bff;
-  }
-  .ocr-selection-box {
-    position: absolute;
-    border: 2px dashed #0d6efd;
-    display: none;
-    z-index: 10;
-    pointer-events: none;
-
-  }
-  .ocr-right {
+  .ocr-left {
     flex: 1;
     padding: 10px;
     overflow-y: auto;
@@ -46,41 +27,7 @@ body {
     position: relative;
 
   }
-  .bbox {
-    position: absolute;
-    border: 2px solid red;
-    background: rgba(255, 0, 0, 0.1);
-    pointer-events: auto; /* Enable hover, click */
-  }
-  .ocr-block {
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      padding: 8px;
-      margin-bottom: 10px;
-      transition: background-color 0.2s, border-color 0.2s;
-  }
-  .form-check-input{
-      border: solid 1px;
-  }
-  .ocr-block:hover {
-      background-color: #f0f8ff;
-      border-color: #007bff;
-  }
-  .bbox.highlight {
-      border-color: #007bff;
-      background: rgba(0, 123, 255, 0.2);
-  }   
-  .ocr-block.highlight {
-      background-color: #e0f0ff;
-      border-color: #007bff;
-  }   
-  .ocr-warning {
-    padding: 5px;
-    background-color: #ffe9e9;
-    color: #900;
-    font-size: 0.9em;
-    border-top: 1px solid #f99;
-  }
+  
   .spinner-overlay {
       position: fixed;
       top: 0;
@@ -94,17 +41,47 @@ body {
       justify-content: center;
       pointer-events: auto;
     }
-    .floating-toolbar {
-      position: absolute;
-      background: white;
-      padding: 5px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.2);
-    }
+    
     .d-none {
       display: none;
     }
-    .editable-block {
-      white-space: pre-wrap;
+    .ce-block {
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
     }
+  
+    /* Optional: remove the line after the last block */
+    .ce-block:last-child {
+      border-bottom: none;
+    }
+    /* Make the "+" menu taller and fit more items */
+    .ce-popover--opened>.ce-popover__container {
+      max-height: 450px !important; /* default is ~250px */
+
+    }
+ 
+    .cdx-notifies {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      pointer-events: none; /* So it doesn't block clicks behind */
+    }
+    
+    .cdx-notifier {
+      pointer-events: auto; /* Let user interact if needed */
+      background-color: #fefefe;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      max-width: 90vw;
+      text-align: center;
+      font-size: 16px;
+    }
+    

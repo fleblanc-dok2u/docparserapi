@@ -89,9 +89,9 @@ def get_pdf_ocr(file_path,output_path):
    
     #Save layout
     # json_path = os.path.join(output_path, f"layout.json")
-    # file_list.append(json_path)  
     # with open(json_path, "w", encoding="utf-8") as json_file:
-    #     json.dump(blocks_list, json_file, indent=4, ensure_ascii=False)
+    #     json.dump(structured_data, json_file, indent=4, ensure_ascii=False)
+        
     return structured_data
 
 def get_document_ocr(file_path,output_path):

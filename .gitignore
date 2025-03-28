@@ -1,5 +1,6 @@
 .vscode/launch.json
 static/data/*
+static/image/*
 !static/data/base.txt
 py/__pycache__/*
 /__pycache__/*

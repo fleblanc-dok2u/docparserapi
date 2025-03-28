@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file,render_template,url_for
+from flask import Flask, request, jsonify, render_template,send_from_directory
 import os
 import json
 import mimetypes
@@ -6,7 +6,7 @@ import random
 import string
 import requests
 import pandas as pd
-import io
+import uuid
 
 
 # Ensure we can import extractTable from the "py" folder
@@ -17,6 +17,7 @@ from py.processDocument import get_document_ocr,get_pdf_ocr  # Assuming extractT
 
 # File paths
 OUTPUT_PATH = "static/data"
+UPLOAD_FOLDER = "static/image"
 
 def clear_folder(folder_path):
     for filename in os.listdir(folder_path):
@@ -91,8 +92,59 @@ def create_app():
         except Exception as e:
             return jsonify({"error": str(e)}), 500
         
+    @app.route('/uploadFile', methods=['POST'])
+    def upload_file():
+        if 'image' not in request.files:
+            return jsonify({'success': 0, 'message': 'No image part'}), 400
 
-  
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'success': 0, 'message': 'No selected file'}), 400
+
+        ext = os.path.splitext(file.filename)[1]
+        filename = f"{uuid.uuid4()}{ext}"
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(filepath)
+
+        return jsonify({
+            'success': 1,
+            'file': {
+                'url': f'/{UPLOAD_FOLDER}/{filename}'
+            }
+        })
+
+    @app.route('/fetchUrl', methods=['POST'])
+    def fetch_url():
+        data = request.get_json()
+        image_url = data.get('url')
+
+        if not image_url:
+            return jsonify({'success': 0, 'message': 'No URL provided'}), 400
+
+        try:
+            response = requests.get(image_url)
+            response.raise_for_status()
+
+            ext = os.path.splitext(image_url.split('?')[0])[1] or '.jpg'
+            filename = f"{uuid.uuid4()}{ext}"
+            filepath = os.path.join(UPLOAD_FOLDER, filename)
+
+            with open(filepath, 'wb') as f:
+                f.write(response.content)
+
+            return jsonify({
+                'success': 1,
+                'file': {
+                    'url': f'/uploads/{filename}'
+                }
+            })
+        except Exception as e:
+            return jsonify({'success': 0, 'message': str(e)}), 500
+
+    @app.route('/uploads/<filename>')
+    def uploaded_file(filename):
+        return send_from_directory(UPLOAD_FOLDER, filename)    
+    
     return app
 
 # Start  web server
