@@ -2,5 +2,6 @@
 static/data/*
 static/image/*
 !static/data/base.txt
+!static/image/base.txt
 py/__pycache__/*
 /__pycache__/*
